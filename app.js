@@ -109,6 +109,7 @@
       x: 0,
       y: 0,
       scale: 1,
+      zoom: 1,
       rotation: 0,
       opacity: 1,
       locked: false
@@ -200,8 +201,8 @@
   function syncCameraControls() {
     elements.cameraOpacityRange.value = state.camera.opacity.toFixed(2);
     elements.cameraOpacityValue.textContent = state.camera.opacity.toFixed(2);
-    elements.cameraZoomRange.value = state.camera.scale.toFixed(2);
-    elements.cameraZoomValue.textContent = `${state.camera.scale.toFixed(2)}x`;
+    elements.cameraZoomRange.value = state.camera.zoom.toFixed(2);
+    elements.cameraZoomValue.textContent = `${state.camera.zoom.toFixed(2)}x`;
 
     elements.cameraLockButton.classList.toggle("is-lock-on", state.camera.locked);
     elements.cameraLockButton.setAttribute("aria-pressed", String(state.camera.locked));
@@ -303,15 +304,37 @@
   function drawCameraLayer(canvasWidth, canvasHeight) {
     const video = state.camera.video;
     if (!video.videoWidth || !video.videoHeight) return;
+    const sourceWidth = video.videoWidth;
+    const sourceHeight = video.videoHeight;
+    const fitScale = Math.min(canvasWidth / sourceWidth, canvasHeight / sourceHeight);
+    const drawWidth = sourceWidth * fitScale * state.camera.scale;
+    const drawHeight = sourceHeight * fitScale * state.camera.scale;
+    const centerX = canvasWidth * 0.5 + (state.camera.x / 100) * canvasWidth;
+    const centerY = canvasHeight * 0.5 + (state.camera.y / 100) * canvasHeight;
 
-    drawLayer(
+    const zoom = clamp(state.camera.zoom || 1, 1, 8);
+    const sampleWidth = sourceWidth / zoom;
+    const sampleHeight = sourceHeight / zoom;
+    const sampleX = (sourceWidth - sampleWidth) * 0.5;
+    const sampleY = (sourceHeight - sampleHeight) * 0.5;
+
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(state.camera.rotation);
+    ctx.globalAlpha = clamp(state.camera.opacity, 0, 1);
+    ctx.drawImage(
       video,
-      video.videoWidth,
-      video.videoHeight,
-      state.camera,
-      canvasWidth,
-      canvasHeight
+      sampleX,
+      sampleY,
+      sampleWidth,
+      sampleHeight,
+      -drawWidth * 0.5,
+      -drawHeight * 0.5,
+      drawWidth,
+      drawHeight
     );
+    ctx.restore();
+    ctx.globalAlpha = 1;
   }
 
   function hexToRgb(hex) {
@@ -628,7 +651,8 @@
     if (projectData.camera) {
       state.camera.x = clamp(Number(projectData.camera.x) || 0, -300, 300);
       state.camera.y = clamp(Number(projectData.camera.y) || 0, -300, 300);
-      state.camera.scale = clamp(Number(projectData.camera.scale) || 1, 1, 8);
+      state.camera.scale = clamp(Number(projectData.camera.scale) || 1, 0.1, 8);
+      state.camera.zoom = clamp(Number(projectData.camera.zoom) || 1, 1, 8);
       state.camera.rotation = normalizeAngle(Number(projectData.camera.rotation) || 0);
       state.camera.opacity = clamp(Number(projectData.camera.opacity) || 1, 0, 1);
       state.camera.locked = Boolean(projectData.camera.locked);
@@ -669,6 +693,7 @@
         x: state.camera.x,
         y: state.camera.y,
         scale: state.camera.scale,
+        zoom: state.camera.zoom,
         rotation: state.camera.rotation,
         opacity: state.camera.opacity,
         locked: state.camera.locked
@@ -1203,7 +1228,7 @@
       const moveY = ((center.y - state.gesture.startCenter.y) / state.viewport.height) * 100;
       const scaleRatio = distance / Math.max(1, state.gesture.startDistance);
       const rotation = angleDelta(angle, state.gesture.startAngle);
-      const minScale = state.gesture.layerName === "camera" ? 1 : 0.1;
+      const minScale = 0.1;
 
       layer.x = clamp(state.gesture.initialX + moveX, -300, 300);
       layer.y = clamp(state.gesture.initialY + moveY, -300, 300);
@@ -1362,6 +1387,7 @@
       state.camera.x = 0;
       state.camera.y = 0;
       state.camera.scale = 1;
+      state.camera.zoom = 1;
       state.camera.rotation = 0;
       state.camera.opacity = 1;
       syncCameraControls();
@@ -1382,7 +1408,7 @@
 
     const updateCameraZoom = () => {
       if (state.camera.locked) return syncCameraControls();
-      state.camera.scale = clamp(parseFloat(elements.cameraZoomRange.value) || 1, 1, 8);
+      state.camera.zoom = clamp(parseFloat(elements.cameraZoomRange.value) || 1, 1, 8);
       syncCameraControls();
       requestRender();
     };

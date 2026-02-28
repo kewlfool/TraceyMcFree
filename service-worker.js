@@ -1,4 +1,4 @@
-const CACHE_VERSION = "tracelite-v1.3.14";
+const CACHE_VERSION = "tracelite-v1.3.15";
 const CORE_ASSETS = [
   "./",
   "./index.html",
