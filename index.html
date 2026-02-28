@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    >
+    <meta name="theme-color" content="#111111">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TraceyMcFree">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="apple-touch-icon" href="./icons/icon-180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+    <link rel="stylesheet" href="./style.css">
+    <title>TraceyMcFree</title>
+  </head>
+  <body class="awaiting-image">
+    <main id="app">
+      <canvas id="traceCanvas" aria-label="Tracing Canvas"></canvas>
+
+      <section id="startPrompt" aria-live="polite">
+        <h1>TraceyMcFree</h1>
+        <p>Choose image or project to begin.</p>
+        <label class="start-select">
+          <span>Saved Projects</span>
+          <select id="startProjectSelect" aria-label="Saved Projects On Start"></select>
+        </label>
+        <button id="startUploadButton" class="action-btn" type="button">Load Selected / Choose Image</button>
+      </section>
+
+      <header id="topBar">
+        <button id="drawerToggle" class="ghost-btn" type="button" aria-expanded="false">
+          Controls
+        </button>
+        <div id="statusBadge"></div>
+      </header>
+
+      <aside id="controlDrawer" aria-label="Control Bar">
+        <div id="tabBar" role="tablist" aria-label="Feature Tabs">
+          <button class="tab-btn is-active" type="button" data-tab="image" role="tab" aria-selected="true">
+            Image
+          </button>
+          <button class="tab-btn" type="button" data-tab="camera" role="tab" aria-selected="false">
+            Camera
+          </button>
+          <button class="tab-btn" type="button" data-tab="edit" role="tab" aria-selected="false">
+            Edit
+          </button>
+          <button class="tab-btn" type="button" data-tab="grid" role="tab" aria-selected="false">
+            Grid
+          </button>
+          <button class="tab-btn" type="button" data-tab="project" role="tab" aria-selected="false">
+            Project
+          </button>
+        </div>
+
+        <div class="panel-track">
+          <section class="tab-panel is-active" data-tab-panel="image" role="tabpanel">
+            <button id="replaceImageButton" class="chip-btn" type="button">Replace</button>
+            <button id="removeImageButton" class="chip-btn" type="button">Remove</button>
+            <button id="imageLockButton" class="chip-btn" type="button" aria-pressed="false">
+              Image Lock
+            </button>
+            <label id="imageOpacityControl" class="chip-range">
+              <span>Opacity <output id="imageOpacityValue">0.70</output></span>
+              <input id="imageOpacityRange" type="range" min="0" max="1" step="0.01" value="0.7">
+            </label>
+          </section>
+
+          <section class="tab-panel" data-tab-panel="camera" role="tabpanel">
+            <button id="resetCameraButton" class="chip-btn" type="button">Reset</button>
+            <button id="cameraLockButton" class="chip-btn" type="button" aria-pressed="false">
+              Camera Lock
+            </button>
+            <label id="cameraOpacityControl" class="chip-range">
+              <span>Opacity <output id="cameraOpacityValue">1.00</output></span>
+              <input id="cameraOpacityRange" type="range" min="0" max="1" step="0.01" value="1">
+            </label>
+            <label id="cameraZoomControl" class="chip-range">
+              <span>Zoom <output id="cameraZoomValue">1.00x</output></span>
+              <input id="cameraZoomRange" type="range" min="1" max="8" step="0.01" value="1">
+            </label>
+          </section>
+
+          <section class="tab-panel" data-tab-panel="edit" role="tabpanel">
+            <button id="resetEditButton" class="chip-btn" type="button">Reset</button>
+            <label id="editGrayscaleControl" class="chip-toggle compact">
+              <span>Grayscale</span>
+              <input id="grayscaleToggle" type="checkbox" role="switch">
+            </label>
+            <label id="editBrightnessControl" class="chip-range">
+              <span>Brightness <output id="brightnessValue">0</output></span>
+              <input id="brightnessRange" type="range" min="-100" max="100" step="1" value="0">
+            </label>
+            <label id="editContrastControl" class="chip-range">
+              <span>Contrast <output id="contrastValue">0</output></span>
+              <input id="contrastRange" type="range" min="-100" max="100" step="1" value="0">
+            </label>
+            <label id="editExposureControl" class="chip-range">
+              <span>Exposure <output id="exposureValue">0.0</output></span>
+              <input id="exposureRange" type="range" min="-2" max="2" step="0.1" value="0">
+            </label>
+          </section>
+
+          <section class="tab-panel" data-tab-panel="grid" role="tabpanel">
+            <label id="gridToggleControl" class="chip-toggle chip-toggle-small">
+              <span>Grid</span>
+              <input id="gridToggle" type="checkbox" role="switch">
+            </label>
+            <label id="gridSizeControl" class="chip-range">
+              <span>Grid Size <output id="gridSizeValue">40px</output></span>
+              <input id="gridSizeRange" type="range" min="20" max="200" step="1" value="40">
+            </label>
+            <label id="gridOpacityControl" class="chip-range">
+              <span>Opacity <output id="gridOpacityValue">30%</output></span>
+              <input id="gridOpacityRange" type="range" min="0" max="100" step="1" value="30">
+            </label>
+            <label id="gridColorControl" class="chip-color">
+              <span>Color</span>
+              <input id="gridColorInput" type="color" value="#ffffff">
+            </label>
+          </section>
+
+          <section class="tab-panel" data-tab-panel="project" role="tabpanel">
+            <label id="projectSavedControl" class="chip-select">
+              <span>Saved</span>
+              <select id="projectSelect" aria-label="Saved Projects"></select>
+            </label>
+            <label id="projectNameControl" class="chip-input">
+              <span>Name</span>
+              <input
+                id="projectNameInput"
+                type="text"
+                maxlength="40"
+                autocomplete="off"
+                placeholder="New project"
+              >
+            </label>
+            <button id="saveProjectButton" class="chip-btn" type="button">Save</button>
+            <button id="loadProjectButton" class="chip-btn" type="button">Load</button>
+            <button id="deleteProjectButton" class="chip-btn" type="button">Delete</button>
+          </section>
+        </div>
+      </aside>
+
+      <input id="imageInput" type="file" accept="image/*" hidden>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
